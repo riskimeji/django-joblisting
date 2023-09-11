@@ -1,9 +1,9 @@
-# django-joblisting
+# django-joblisting Instalation
 
-# git clone
+1. git clone
 
-# cd django-joblisting
+2. cd django-joblisting
 
-# npm install
+3. npm install
 
-# node index
+4. node index
