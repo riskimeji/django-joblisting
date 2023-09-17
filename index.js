@@ -11,6 +11,7 @@ import Subscription from "./routes/SubscriptionRoute.js";
 import CareerRoute from "./routes/CareerRoute.js";
 import CategoryRoute from "./routes/CategoryRoute.js";
 import JobtypeRoute from "./routes/JobTypeRoute.js";
+import JobAppliedRoute from "./routes/JobAppliedRoute.js";
 dotenv.config();
 
 import db from "./config/Database.js";
@@ -55,6 +56,7 @@ app.use(Subscription);
 app.use(CareerRoute);
 app.use(CategoryRoute);
 app.use(JobtypeRoute);
+app.use(JobAppliedRoute);
 
 // store.sync();
 

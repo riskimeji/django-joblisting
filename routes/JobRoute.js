@@ -17,10 +17,10 @@ router.patch("/job/:id", verifyUser, updateJobById);
 router.delete("/job/:id", verifyUser, deleteJob);
 
 //Api
-router.get("/api/admin/job", verifyUser, getJob);
+router.get("/api/admin/job", getJob);
 router.post("/api/admin/job", verifyUser, createJob);
 router.delete("/api/admin/job/:id", verifyUser, deleteJob);
-router.get("/api/admin/job/:id", verifyUser, getJobById);
+router.get("/api/admin/job/:id", getJobById);
 router.patch("/api/admin/job/:id", verifyUser, updateJobById);
 
 export default router;

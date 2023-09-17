@@ -1,4 +1,4 @@
-# django-joblisting Instalation
+# nodejs-joblisting Instalation
 
 1. git clone
 

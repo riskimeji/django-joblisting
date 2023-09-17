@@ -61,10 +61,11 @@ const Job = db.define(
       },
     },
     description: {
-      type: DataTypes.STRING,
+      type: DataTypes.TEXT,
       allowNull: false,
       validate: {
         notEmpty: true,
+        len: [0, 3000],
       },
     },
     status: {

@@ -3,14 +3,16 @@ import User from "../models/UserModel.js";
 import Category from "../models/CategoryModel.js";
 import Career from "../models/CareerModel.js";
 import JobType from "../models/JobTypeMode.js";
-import slugify from "voca";
 import { Op } from "sequelize";
 
 export const getJob = async (req, res) => {
+  const selectedCareers = req.query.careers;
+  const selectedJobTypes = req.query.jobtypes;
+  const searchKeyword = req.query.search;
+
   try {
     let response;
-    const limit = req.query.limit || null; // Mengambil nilai limit dari query parameter, atau null jika tidak ada
-
+    const limit = req.query.limit || null;
     const queryOptions = {
       attributes: [
         "uuid",
@@ -42,16 +44,77 @@ export const getJob = async (req, res) => {
       ],
     };
 
+    if (selectedCareers) {
+      queryOptions.include.push({
+        model: Career,
+        where: {
+          id: {
+            [Op.in]: selectedCareers.split(",").map(Number),
+          },
+        },
+        attributes: [],
+      });
+    }
+
+    if (selectedJobTypes) {
+      queryOptions.include.push({
+        model: JobType,
+        where: {
+          id: {
+            [Op.in]: selectedJobTypes.split(",").map(Number),
+          },
+        },
+        attributes: [],
+      });
+    }
+
+    if (searchKeyword) {
+      queryOptions.where = {
+        [Op.and]: [
+          {
+            [Op.or]: [
+              { title: { [Op.like]: `%${searchKeyword}%` } },
+              { description: { [Op.like]: `%${searchKeyword}%` } },
+            ],
+          },
+          selectedJobTypes
+            ? {
+                [Op.or]: [
+                  {
+                    "$JobType.id$": {
+                      [Op.in]: selectedJobTypes.split(",").map(Number),
+                    },
+                  },
+                  { "$JobType.id$": null },
+                ],
+              }
+            : {},
+          ,
+          selectedCareers
+            ? {
+                [Op.or]: [
+                  {
+                    "$Career.id$": {
+                      [Op.in]: selectedCareers.split(",").map(Number),
+                    },
+                  },
+                  { "$Career.id$": null },
+                ],
+              }
+            : {},
+        ],
+      };
+    }
+
     if (req.role === "admin") {
       response = await Job.findAll(queryOptions);
     } else {
-      queryOptions.where = {
-        userId: req.userId,
-      };
+      // queryOptions.where = {
+      //   userId: req.userId,
+      // };
       response = await Job.findAll(queryOptions);
     }
 
-    // Menerapkan batasan jumlah data jika query parameter 'limit' ada
     if (limit) {
       response = response.slice(0, parseInt(limit, 10));
     }
@@ -77,6 +140,7 @@ export const getJobById = async (req, res) => {
           "uuid",
           "title",
           "address",
+          "slug",
           "est_gaji",
           "description",
           "status",
@@ -111,6 +175,7 @@ export const getJobById = async (req, res) => {
           "uuid",
           "title",
           "address",
+          "slug",
           "est_gaji",
           "description",
           "status",
@@ -118,8 +183,9 @@ export const getJobById = async (req, res) => {
           "updatedAt",
         ],
         where: {
-          [Op.and]: [{ id: job.id }, { userId: req.userId }],
+          [Op.and]: [{ id: job.id }],
         },
+        // , { userId: req.userId }
         include: [
           {
             model: User,
@@ -127,11 +193,11 @@ export const getJobById = async (req, res) => {
           },
           {
             model: Category,
-            attributes: ["name"],
+            attributes: ["id", "name"],
           },
           {
             model: Career,
-            attributes: ["name"],
+            attributes: ["id", "name"],
           },
           {
             model: JobType,
@@ -154,10 +220,24 @@ export const createJob = async (req, res) => {
     address,
     est_gaji,
     description,
-    status,
+    // status,
+    slug,
   } = req.body;
+
+  const validate = await Job.findOne({
+    attributes: ["slug"],
+    where: {
+      slug: slug,
+    },
+  });
+  if (validate !== null) {
+    return res.status(400).json({
+      success: false,
+      msg: "slug already exist",
+    });
+  }
   try {
-    let slug = slugify(req.body.title).toString();
+    // let slug = slugify(req.body.title).toString();
     let status = "aktif";
     await Job.create({
       userId: req.userId,
@@ -168,8 +248,8 @@ export const createJob = async (req, res) => {
       address: req.body.address,
       est_gaji: req.body.est_gaji,
       description: req.body.description,
-      status: req.body.status,
-      slug: slug,
+      status: status,
+      slug: req.body.slug,
     });
     res.status(200).json({ msg: "job created successfully" });
   } catch (error) {
@@ -192,9 +272,9 @@ export const updateJobById = async (req, res) => {
       address,
       est_gaji,
       description,
-      status,
+      slug,
     } = req.body;
-    let slug = slugify(req.body.title).toString();
+    let status = "aktif";
 
     if (req.role === "admin") {
       await Job.update(
@@ -208,7 +288,7 @@ export const updateJobById = async (req, res) => {
           est_gaji: req.body.est_gaji,
           description: req.body.description,
           status: status,
-          slug: slug,
+          slug: req.body.slug,
         },
         {
           where: {
@@ -230,7 +310,7 @@ export const updateJobById = async (req, res) => {
           est_gaji: req.body.est_gaji,
           description: req.body.description,
           status: status,
-          slug: slug,
+          slug: req.body.slug,
         },
         {
           where: {
@@ -260,9 +340,9 @@ export const deleteJob = async (req, res) => {
       address,
       est_gaji,
       description,
-      status,
+      slug,
     } = req.body;
-    let slug = slugify(req.body.title).toString();
+    let status = "aktif";
 
     if (req.role === "admin") {
       await Job.destroy({
