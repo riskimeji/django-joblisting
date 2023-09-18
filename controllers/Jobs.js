@@ -15,6 +15,7 @@ export const getJob = async (req, res) => {
     const limit = req.query.limit || null;
     const queryOptions = {
       attributes: [
+        "id",
         "uuid",
         "title",
         "address",

@@ -60,7 +60,7 @@ export const createJobApplied = async (req, res) => {
     if (existingApplication) {
       return res.status(400).json({
         success: false,
-        msg: "User already applied for this job",
+        message: " You have already applied for this job",
       });
     }
 
@@ -78,5 +78,69 @@ export const createJobApplied = async (req, res) => {
   } catch (error) {
     console.error("Error creating job application:", error);
     return res.status(500).json({ msg: "Error creating job application" });
+  }
+};
+
+export const updateJobApplied = async (req, res) => {
+  try {
+    const jobApplied = await JobApplied.findOne({
+      where: {
+        uuid: req.params.id,
+      },
+    });
+    if (!jobApplied) return res.status(404).json({ msg: "not found data" });
+    const {
+      status,
+      userId,
+      jobId,
+      jobtypeId,
+      address,
+      est_gaji,
+      description,
+      slug,
+    } = req.body;
+
+    if (req.role === "admin") {
+      await JobApplied.update(
+        {
+          status: req.body.status,
+        },
+        {
+          where: {
+            id: jobApplied.id,
+          },
+        }
+      );
+    } else {
+      return res.status(403).json({ msg: "access denied" });
+    }
+    res.status(200).json({ msg: "job updated successfuly" });
+  } catch (error) {
+    res.status(500).json({ msg: error.message });
+  }
+};
+
+export const deleteJob = async (req, res) => {
+  try {
+    const jobApplied = await JobApplied.findOne({
+      where: {
+        uuid: req.params.id,
+      },
+    });
+    if (!jobApplied) return res.status(404).json({ msg: "not found data" });
+    const { status, userId, jobId } = req.body;
+
+    if (req.role === "admin") {
+      await jobApplied.destroy({
+        where: {
+          id: jobApplied.id,
+        },
+      });
+    } else {
+      return res.status(403).json({ msg: "access denied" });
+    }
+    res.status(200).json({ msg: "job deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ msg: error.message });
   }
 };
