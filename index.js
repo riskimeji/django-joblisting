@@ -22,9 +22,9 @@ const sessionStore = SequelizeStore(session.Store);
 const store = new sessionStore({
   db: db,
 });
-// (async () => {
-//   await db.sync();
-// })();
+(async () => {
+  await db.sync();
+})();
 app.use(bodyParser.json());
 
 // parse requests of content-type - application/x-www-form-urlencoded
@@ -58,7 +58,7 @@ app.use(CategoryRoute);
 app.use(JobtypeRoute);
 app.use(JobAppliedRoute);
 
-// store.sync();
+store.sync();
 
 app.listen(process.env.APP_PORT, () => {
   console.log("Server running");
